@@ -1,0 +1,1241 @@
+Рулетка теперь будет называться KLEVER_TON,клевер - это удача, азарт и позитивные эмоции сделай ребрендинг дизайна не повредив функционал, если рамка куплена больше ее нельзя купить, ее можно только выбрать и снять использовав стандартную, у всех стандартные рамки пока они их не купят, рамки должны быть жирнее чтобы выделяться
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuckyTOM - Рулетка</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes winnerGlow {
+            0% { box-shadow: 0 0 10px 5px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 20px 10px rgba(255, 215, 0, 0.8); }
+            100% { box-shadow: 0 0 10px 5px rgba(255, 215, 0, 0.5); }
+        }
+        
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100px) rotate(360deg); opacity: 0; }
+        }
+        
+        .scrolling-wrapper {
+            animation: scroll 25s linear infinite;
+        }
+        
+        .roulette-track {
+            transition: transform 8s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        }
+        
+        .winner-highlight {
+            animation: winnerGlow 1.5s infinite;
+            transform: scale(1.2);
+            z-index: 10;
+            border: 3px solid gold;
+            position: relative;
+        }
+        
+        .winner-highlight::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border-radius: 8px;
+            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%);
+            z-index: -1;
+        }
+        
+        .countdown-pulse {
+            animation: pulse 1s infinite;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a0b4d 0%, #25136e 50%, #3a24a1 100%);
+        }
+        
+        .player-card {
+            transition: all 0.3s ease;
+        }
+        
+        .player-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Avatar frame styles */
+        .avatar-container {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #374151;
+        }
+        
+        .avatar-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Different frame types from shop */
+        .frame-bronze {
+            border-color: #cd7f32;
+            box-shadow: 0 0 8px 3px rgba(205, 127, 50, 0.5);
+            background: repeating-linear-gradient(45deg, #cd7f32, #cd7f32 5px, #8c5e24 5px, #8c5e24 10px);
+        }
+        
+        .frame-silver {
+            border-color: #c0c0c0;
+            box-shadow: 0 0 12px 5px rgba(192, 192, 192, 0.6);
+            background: repeating-linear-gradient(45deg, #e0e0e0, #e0e0e0 5px, #a8a8a8 5px, #a8a8a8 10px);
+        }
+        
+        .frame-gold {
+            border-color: #ffd700;
+            box-shadow: 0 0 16px 8px rgba(255, 215, 0, 0.7);
+            background: repeating-linear-gradient(45deg, #ffd700, #ffd700 5px, #daa520 5px, #daa520 10px);
+        }
+        
+        .frame-diamond {
+            border-color: #b9f2ff;
+            box-shadow: 0 0 20px 10px rgba(185, 242, 255, 0.6);
+            background: repeating-linear-gradient(45deg, #b9f2ff, #b9f2ff 5px, #7ec8e3 5px, #7ec8e3 10px);
+        }
+        
+        /* Tab styles */
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            background: linear-gradient(135deg, #3a24a1 0%, #4b37d1 100%);
+            color: white;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Winner animations */
+        .jackpot-crown {
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #f9ca24;
+            font-size: 24px;
+            animation: pulse 1.5s infinite;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+        }
+        
+        .lucky-star {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            color: #f9ca24;
+            font-size: 20px;
+            animation: spin 2s linear infinite;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 2px;
+        }
+        
+        /* Shop frame preview */
+        .shop-frame-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            position: relative;
+            background-color: #4b5563;
+        }
+        
+        .shop-frame-preview img {
+            width: 68px;
+            height: 68px;
+            border-radius: 8px;
+            object-fit: cover;
+            z-index: 1;
+        }
+        
+        /* Shop item */
+        .shop-item {
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            background: linear-gradient(145deg, #1f2937, #111827);
+        }
+        
+        .shop-item:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .shop-item-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Section titles */
+        .section-title {
+            position: relative;
+            display: inline-block;
+            font-size: 1.1rem;
+            font-weight: 7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 2px;
+        }
+        
+        /* Bet controls */
+        .bet-control {
+            transition: all 0.2s ease;
+        }
+        
+        .bet-control:hover {
+            transform: scale(1.03);
+        }
+        
+        /* Roulette pointer */
+        .roulette-pointer {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255,215,0,0.1), rgba(255,215,0,1), rgba(255,215,0,0.1));
+            z-index: 20;
+        }
+        
+        .roulette-pointer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 16px;
+            background: #ffd700;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        /* Winner card styles */
+        .winner-card {
+            background: linear-gradient(145deg, #1f2937, #111827);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .winner-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .winner-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: linear-gradient(45deg, #f59e0b, #f97316);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-bottom-left-radius: 6px;
+            z-index: 2;
+        }
+        
+        .winner-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            margin: 0 auto;
+            position: relative;
+            margin-top: 12px;
+            border: 2px solid transparent;
+        }
+        
+        .winner-username {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 6px;
+            text-align: center;
+            color: #e2e8f0;
+            padding: 0 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .winner-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 12px;
+            margin-top: 6px;
+            background: rgba(30, 41, 59, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .winner-stat {
+            text-align: center;
+            margin: 3px 0;
+        }
+        
+        .winner-stat-value {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+        
+        .winner-stat-label {
+            font-size: 0.6rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        
+        /* Player list item */
+        .player-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .player-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .player-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            margin-right: 10px;
+        }
+        
+        .player-info {
+            flex: 1;
+            min-width: 0;
+}
+        
+        .player-username {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .player-bet {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+        
+        .player-chance {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #f59e0b;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        /* Disabled button style */
+        .btn-disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        /* Chance indicator */
+        .chance-indicator {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 10px;
+            text-align: center;
+            padding: 2px 0;
+            font-weight: bold;
+        }
+        
+        /* Winner notification */
+        .winner-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #3a24a1, #4b37d1);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            z-index: 100;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -40%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        
+        .winner-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f9ca24;
+            margin: 10px 0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 400px) {
+            .winner-avatar {
+                width: 56px;
+                height: 56px;
+            }
+            
+            .winner-username {
+                font-size: 0.75rem;
+            }
+            
+            .winner-stat-value {
+                font-size: 0.75rem;
+            }
+            
+            .shop-item {
+                padding: 12px;
+            }
+            
+            .shop-frame-preview {
+                width: 64px;
+                height: 64px;
+            }
+            
+            .shop-frame-preview img {
+                width: 56px;
+                height: 56px;
+            }
+            
+            .avatar-container {
+                width: 56px;
+                height: 56px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="container mx-auto px-4 py-4 max-w-md">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-5">
+            <div class="flex items-center">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 flex items-center justify-center mr-2">
+                    <span class="font-bold text-sm">LT</span>
+                </div>
+                <h1 class="text-lg font-bold">Lucky<span class="text-yellow-400">TOM</span></h1>
+            </div>
+            <div class="flex items-center">
+                <div class="bg-gray-800 px-3 py-1 rounded-full flex items-center">
+                    <span class="text-yellow-400 mr-1 text-sm" id="userBalance">1000</span>
+                    <span class="text-xs">TON</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Daily Winners Section -->
+        <div class="bg-gray-800 rounded-xl p-3 mb-4 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-purple-900/10 via-transparent to-blue-900/10 z-0"></div>
+            <div class="relative z-10">
+                <h3 class="section-title text-center">Победители дня</h3>
+                
+                <div class="grid grid-cols-3 gap-3 mb-3" id="dailyWinners">
+                    <!-- Везунчик дня -->
+                    <div class="winner-card">
+                        <div class="winner-badge">Везунчик</div>
+                        <div class="winner-avatar frame-gold">
+                            <img src="https://i.pravatar.cc/150?img=7" class="w-full h-full rounded-lg">
+                        </div>
+                        <div class="winner-username">@luckycharm</div>
+                        <div class="winner-stats">
+                            <div class="winner-stat">
+                                <div class="winner-stat-value">0.98%</div>
+                                <div class="winner-stat-label">шанс</div>
+                            </div>
+                            <div class="winner-stat">
+                                <div class="winner-stat-value">128 TON</div>
+                                <div class="winner-stat-label">выигрыш</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- JackPot дня -->
+                    <div class="winner-card">
+                        <div class="winner-badge">JackPot</div>
+                        <div class="winner-avatar frame-diamond">
+                            <img src="https://i.pravatar.cc/150?img=5" class="w-full h-full rounded-lg">
+                        </div>
+                        <div class="winner-username">@bigwinner</div>
+                        <div class="winner-stats">
+                            <div class="winner-stat">
+                                <div class="winner-stat-value">1.25%</div>
+                                <div class="winner-stat-label">шанс</div>
+                            </div>
+                            <div class="winner-stat">
+                                <div class="winner-stat-value">1024 TON</div>
+                                <div class="winner-stat-label">выигрыш</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Последний победитель -->
+                    <div class="winner-card">
+                        <div class="winner-badge">Последний</div>
+                        <div class="winner-avatar frame-silver">
+                            <img src="https://i.pravatar.cc/150?img=9" class="w-full h-full rounded-lg">
+                        </div>
+                        <div class="winner-username">@newwinner</div>
+                        <div class="winner-stats">
+                            <div class="winner-stat">
+                                <div class="winner-stat-value">0.75%</div>
+                                <div class="winner-stat-label">шанс</div>
+                            </div>
+                            <div class="winner-stat">
+                                <div class="winner-stat-value">256 TON</div>
+                                <div class="winner-stat-label">выигрыш</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game/Shop Tabs -->
+        <div class="flex justify-center mb-5 bg-gray-800 rounded-full p-1">
+            <button id="playTabBtn" class="tab-button active px-5 py-1.5 rounded-full font-medium w-1/2 text-xs uppercase tracking-wide">Играть</button>
+            <button id="shopTabBtn" class="tab-button px-5 py-1.5 rounded-full font-medium w-1/2 text-xs uppercase tracking-wide">Магазин</button>
+        </div>
+        
+        <!-- Game Area (visible by default) -->
+        <div id="gameArea">
+            <!-- Roulette Container -->
+            <div class="roulette-container mb-4">
+                <div class="relative overflow-hidden h-40 mb-3 rounded-xl bg-gray-800 border border-gray-700">
+                    <div id="rouletteTrack" class="roulette-track flex items-center absolute left-0 top-0 h-full"></div>
+                    <div class="roulette-pointer"></div>
+                </div>
+                
+                <div class="text-center mb-3">
+                    <div id="countdown" class="text-2xl font-extrabold countdown-pulse hidden">15</div>
+                    <div id="roundStatus" class="text-lg font-bold text-gray-200">Ожидание игроков...</div>
+                    <div id="prizePool" class="text-yellow-400 text-base font-semibold mt-1">Призовой фонд: <span id="poolAmount">0</span> TON</div>
+                </div>
+            </div>
+            
+            <!-- Bet Controls -->
+            <div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl p-3 mb-4 border border-gray-700 shadow-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-300 text-sm font-medium">ВАША СТАВКА</span>
+                    <div class="flex items-center">
+                        <span class="text-yellow-400 mr-1 text-sm font-bold" id="userBalance2">1000</span>
+                        <span class="text-xs">TON</span>
+                    </div>
+                </div>
+                
+                <div class="flex mb-3">
+                    <button class="bet-control bg-gray-700 hover:bg-yellow-500 hover:text-gray-900 px-2 py-1.5 rounded-l-lg transition-all text-sm" onclick="adjustBet(-10)">-10</button>
+                    <button class="bet-control bg-gray-700 hover:bg-yellow-500 hover:text-gray-900 px-2 py-1.5 transition-all text-sm" onclick="adjustBet(-5)">-5</button>
+                    <input type="number" id="betAmount" value="10" min="1" max="1000" class="bg-gray-900 text-center text-base font-bold flex-grow border-t border-b border-gray-700 focus:outline-none focus:ring-1 focus:ring-yellow-500 text-sm">
+                    <button class="bet-control bg-gray-700 hover:bg-yellow-500 hover:text-gray-900 px-2 py-1.5 transition-all text-sm" onclick="adjustBet(5)">+5</button>
+                    <button class="bet-control bg-gray-700 hover:bg-yellow-500 hover:text-gray-900 px-2 py-1.5 rounded-r-lg transition-all text-sm" onclick="adjustBet(10)">+10</button>
+                </div>
+                
+                <button id="placeBetBtn" onclick="placeBet()" class="w-full bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-[1.01] active:scale-100 shadow-md hover:shadow-lg active:shadow-md uppercase text-xs tracking-wide">
+                    Сделать ставку
+                </button>
+            </div>
+            
+            <!-- Participants List -->
+            <div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl p-3 mb-4 border border-gray-700">
+                <h3 class="font-semibold mb-3 text-base">Участники раунда (<span id="playersCount">0</span>)</h3>
+                <div id="playersList" class="space-y-2 max-h-40 overflow-y-auto pr-2">
+                    <!-- Players will be added here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Shop Area (hidden by default) -->
+        <div id="shopArea" class="hidden">
+            <div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl p-3 border border-gray-700">
+                <h3 class="section-title text-center mb-4">Анимированные рамки</h3>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Bronze Frame -->
+                    <div class="shop-item rounded-lg p-3 flex flex-col items-center shadow-sm border border-gray-700">
+                        <div class="shop-frame-preview frame-bronze">
+                            <img src="https://i.pravatar.cc/150?img=11">
+                        </div>
+                        <div class="shop-item-title mb-1">Бронзовая</div>
+                        <div class="text-yellow-400 text-lg font-bold mb-2">100 TON</div>
+                        <button onclick="buyItem('frame-bronze', 100)" class="w-full bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-800 hover:to-yellow-700 text-white py-1.5 px-3 rounded-lg font-medium transition-all transform hover:scale-[1.02] active:scale-100 text-sm">
+                            Купить
+                        </button>
+                    </div>
+                    
+                    <!-- Silver Frame -->
+                    <div class="shop-item rounded-lg p-3 flex flex-col items-center shadow-sm border border-gray-700">
+                        <div class="shop-frame-preview frame-silver">
+                            <img src="https://i.pravatar.cc/150?img=12">
+                        </div>
+                        <div class="shop-item-title mb-1">Серебряная</div>
+                        <div class="text-yellow-400 text-lg font-bold mb-2">250 TON</div>
+                        <button onclick="buyItem('frame-silver', 250)" class="w-full bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-900 py-1.5 px-3 rounded-lg font-medium transition-all transform hover:scale-[1.02] active:scale-100 text-sm">
+                            Купить
+                        </button>
+                    </div>
+                    
+                    <!-- Gold Frame -->
+                    <div class="shop-item rounded-lg p-3 flex flex-col items-center shadow-sm border border-gray-700">
+                        <div class="shop-frame-preview frame-gold">
+                            <img src="https://i.pravatar.cc/150?img=13">
+                        </div>
+                        <div class="shop-item-title mb-1">Золотая</div>
+                        <div class="text-yellow-400 text-lg font-bold mb-2">500 TON</div>
+                        <button onclick="buyItem('frame-gold', 500)" class="w-full bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-gray-900 py-1.5 px-3 rounded-lg font-medium transition-all transform hover:scale-[1.02] active:scale-100 text-sm">
+                            Купить
+                        </button>
+                    </div>
+                    
+                    <!-- Diamond Frame -->
+                    <div class="shop-item rounded-lg p-3 flex flex-col items-center shadow-sm border border-gray-700">
+                        <div class="shop-frame-preview frame-diamond">
+                            <img src="https://i.pravatar.cc/150?img=14">
+                        </div>
+                        <div class="shop-item-title mb-1">Алмазная</div>
+                        <div class="text-yellow-400 text-lg font-bold mb-2">1000 TON</div>
+                        <button onclick="buyItem('frame-diamond', 1000)" class="w-full bg-gradient-to-r from-blue-300 to-blue-400 hover:from-blue-400 hover:to-blue-500 text-white py-1.5 px-3 rounded-lg font-medium transition-all transform hover:scale-[1.02] active:scale-100 text-sm">
+                            Купить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Telegram WebApp initialization
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Game state
+        let gameState = {
+            roundActive: false,
+            players: [],
+            playerDetails: {},
+            countdown: 15,
+            prizePool: 0,
+            userBalance: 1000,
+            currentBet: 10,
+            demoInterval: null,
+            userFrame: 'frame-default',
+            userEffects: [],
+            frameTypes: ['frame-default', 'frame-bronze', 'frame-silver', 'frame-gold', 'frame-diamond'],
+            dailyStats: {
+                winners: [],              // Все победители за день
+                minWinPercentage: null,    // Минимальный процент выигрыша
+                minWinPlayer: null,        // Игрок с минимальным процентом
+                maxWinAmount: 0,           // Максимальный выигрыш
+                maxWinPlayer: null,        // Игрок с максимальным выигрышем
+                lastWinner: null           // Последний победитель
+            }
+        };
+        
+        // Avatar images for demo players
+        const demoAvatars = [
+            'https://i.pravatar.cc/150?img=1',
+            'https://i.pravatar.cc/150?img=2',
+            'https://i.pravatar.cc/150?img=3',
+            'https://i.pravatar.cc/150?img=4',
+            'https://i.pravatar.cc/150?img=5',
+            'https://i.pravatar.cc/150?img=6',
+            'https://i.pravatar.cc/150?img=7',
+            'https://i.pravatar.cc/150?img=8',
+            'https://i.pravatar.cc/150?img=9',
+            'https://i.pravatar.cc/150?img=10',
+            'https://i.pravatar.cc/150?img=11',
+            'https://i.pravatar.cc/150?img=12',
+            'https://i.pravatar.cc/150?img=13',
+            'https://i.pravatar.cc/150?img=14',
+            'https://i.pravatar.cc/150?img=15'
+        ];
+        
+        // DOM elements
+        const rouletteTrack = document.getElementById('rouletteTrack');
+        const countdownElement = document.getElementById('countdown');
+        const roundStatusElement = document.getElementById('roundStatus');
+        const poolAmountElement = document.getElementById('poolAmount');
+        const userBalanceElement = document.getElementById('userBalance');
+        const userBalanceElement2 = document.getElementById('userBalance2');
+        const betAmountElement = document.getElementById('betAmount');
+        const placeBetBtn = document.getElementById('placeBetBtn');
+        const playersList = document.getElementById('playersList');
+        const playersCount = document.getElementById('playersCount');
+        const gameArea = document.getElementById('gameArea');
+        const shopArea = document.getElementById('shopArea');
+        const playTabBtn = document.getElementById('playTabBtn');
+        const shopTabBtn = document.getElementById('shopTabBtn');
+        const dailyWinnersContainer = document.getElementById('dailyWinners');
+        
+        // Tab switching
+        playTabBtn.addEventListener('click', () => {
+            gameArea.classList.remove('hidden');
+            shopArea.classList.add('hidden');
+            playTabBtn.classList.add('active');
+            shopTabBtn.classList.remove('active');
+        });
+        
+        shopTabBtn.addEventListener('click', () => {
+            gameArea.classList.add('hidden');
+            shopArea.classList.remove('hidden');
+            playTabBtn.classList.remove('active');
+            shopTabBtn.classList.add('active');
+        });
+        
+        // Initialize the game
+        function initGame() {
+            updateUI();
+            
+            // Initialize daily winners with demo data
+            updateDailyWinners();
+            
+            // Add demo players with avatars and random frames
+            addDemoPlayer('@ton_king', 120, demoAvatars[0], getRandomFrame());
+            addDemoPlayer('@crypto_guru', 80, demoAvatars[1], getRandomFrame());
+            addDemoPlayer('@ton_fanatic', 60, demoAvatars[2], getRandomFrame());
+            
+            // Start demo interval to add random players
+            gameState.demoInterval = setInterval(() => {
+                if (!gameState.roundActive) {
+                    const demoUsernames = ['@ton_lover', '@crypto_boy', '@ton_whale', '@lucky_ton', '@ton_gambler'];
+                    const randomAmount = Math.floor(Math.random() * 50) + 10;
+                    const randomUsername = demoUsernames[Math.floor(Math.random() * demoUsernames.length)];
+                    const randomAvatar = demoAvatars[Math.floor(Math.random() * demoAvatars.length)];
+                    const randomFrame = getRandomFrame();
+                    
+                    addDemoPlayer(randomUsername, randomAmount, randomAvatar, randomFrame);
+                }
+            }, 3000);
+        }
+        
+        // Update daily winners display
+        function updateDailyWinners() {
+            const dailyWinners = gameState.dailyStats;
+            
+            let luckiestPlayer = dailyWinners.minWinPlayer || {
+                username: '@luckycharm',
+                avatar: demoAvatars[7],
+                frame: 'frame-gold',
+                winPercentage: '0.98',
+                winAmount: 128
+            };
+            
+            let jackpotPlayer = dailyWinners.maxWinPlayer || {
+                username: '@bigwinner',
+                avatar: demoAvatars[5],
+                frame: 'frame-diamond',
+                winPercentage: '1.25',
+                winAmount: 1024
+            };
+            
+            let lastWinner = dailyWinners.lastWinner || {
+                username: '@newwinner',
+                avatar: demoAvatars[9],
+                frame: 'frame-silver',
+                winPercentage: '0.75',
+                winAmount: 256
+            };
+            
+            dailyWinnersContainer.innerHTML = `
+                <!-- Везунчик дня -->
+                <div class="winner-card">
+                    <div class="winner-badge">Везунчик</div>
+                    <div class="winner-avatar ${luckiestPlayer.frame || 'frame-gold'}">
+                        <img src="${luckiestPlayer.avatar}" class="w-full h-full rounded-lg">
+                    </div>
+                    <div class="winner-username">${luckiestPlayer.username}</div>
+                    <div class="winner-stats">
+                        <div class="winner-stat">
+                            <div class="winner-stat-value">${luckiestPlayer.winPercentage || '0.98'}%</div>
+                            <div class="winner-stat-label">шанс</div>
+                        </div>
+                        <div class="winner-stat">
+                            <div class="winner-stat-value">${luckiestPlayer.winAmount || 128} TON</div>
+                            <div class="winner-stat-label">выигрыш</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- JackPot дня -->
+                <div class="winner-card">
+                    <div class="winner-badge">JackPot</div>
+                    <div class="winner-avatar ${jackpotPlayer.frame || 'frame-diamond'}">
+                        <img src="${jackpotPlayer.avatar}" class="w-full h-full rounded-lg">
+                    </div>
+                    <div class="winner-username">${jackpotPlayer.username}</div>
+                    <div class="winner-stats">
+                        <div class="winner-stat">
+                            <div class="winner-stat-value">${jackpotPlayer.winPercentage || '1.25'}%</div>
+                            <div class="winner-stat-label">шанс</div>
+                        </div>
+                        <div class="winner-stat">
+                            <div class="winner-stat-value">${jackpotPlayer.winAmount || 1024} TON</div>
+                            <div class="winner-stat-label">выигрыш</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Последний победитель -->
+                <div class="winner-card">
+                    <div class="winner-badge">Последний</div>
+                    <div class="winner-avatar ${lastWinner.frame || 'frame-silver'}">
+                        <img src="${lastWinner.avatar}" class="w-full h-full rounded-lg">
+                    </div>
+                    <div class="winner-username">${lastWinner.username}</div>
+                    <div class="winner-stats">
+                        <div class="winner-stat">
+                            <div class="winner-stat-value">${lastWinner.winPercentage || '0.75'}%</div>
+                            <div class="winner-stat-label">шанс</div>
+                        </div>
+                        <div class="winner-stat">
+                            <div class="winner-stat-value">${lastWinner.winAmount || 256} TON</div>
+                            <div class="winner-stat-label">выигрыш</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Track daily stats for winner
+        function trackWinnerStats(winnerUsername, totalTickets, prizePool) {
+            const winPercentage = ((gameState.playerDetails[winnerUsername].totalBet / totalTickets) * 100).toFixed(2);
+            const winAmount = prizePool;
+            
+            // Add to daily winners list
+            gameState.dailyStats.winners.push({
+                username: winnerUsername,
+                avatar: gameState.playerDetails[winnerUsername].avatar,
+                frame: gameState.playerDetails[winnerUsername].frame,
+                winPercentage: winPercentage,
+                winAmount: winAmount,
+                timestamp: new Date()
+            });
+            
+            // Update Везунчик дня (player with smallest win percentage)
+            if (!gameState.dailyStats.minWinPercentage || 
+                parseFloat(winPercentage) < parseFloat(gameState.dailyStats.minWinPercentage)) {
+                gameState.dailyStats.minWinPercentage = winPercentage;
+                gameState.dailyStats.minWinPlayer = {
+                    username: winnerUsername,
+                    avatar: gameState.playerDetails[winnerUsername].avatar,
+                    frame: gameState.playerDetails[winnerUsername].frame,
+                    winPercentage: winPercentage,
+                    winAmount: winAmount
+                };
+            }
+            
+            // Update JackPot дня (player with largest win amount)
+            if (winAmount > gameState.dailyStats.maxWinAmount) {
+                gameState.dailyStats.maxWinAmount = winAmount;
+                gameState.dailyStats.maxWinPlayer = {
+                    username: winnerUsername,
+                    avatar: gameState.playerDetails[winnerUsername].avatar,
+                    frame: gameState.playerDetails[winnerUsername].frame,
+                    winPercentage: winPercentage,
+                    winAmount: winAmount
+                };
+            }
+            
+            // Update Последний победитель
+            gameState.dailyStats.lastWinner = {
+                username: winnerUsername,
+                avatar: gameState.playerDetails[winnerUsername].avatar,
+                frame: gameState.playerDetails[winnerUsername].frame,
+                winPercentage: winPercentage,
+                winAmount: winAmount
+            };
+            
+            // Update the display
+            updateDailyWinners();
+        }
+        
+        // Get random frame type
+        function getRandomFrame() {
+            if (Math.random() < 0.6) {
+                return 'frame-default';
+            }
+            return gameState.frameTypes[Math.floor(Math.random() * (gameState.frameTypes.length - 1)) + 1];
+        }
+        
+        // Add a demo player
+        function addDemoPlayer(username, amount, avatarUrl, frameType) {
+            if (!gameState.playerDetails[username]) {
+                gameState.playerDetails[username] = {
+                    totalBet: 0,
+                    avatar: avatarUrl,
+                    frame: frameType || 'frame-default'
+                };
+            }
+            
+            gameState.playerDetails[username].totalBet += amount;
+            gameState.prizePool += amount;
+            
+            // Add to players array for each TON
+            for (let i = 0; i < amount; i++) {
+                gameState.players.push({
+                    username: username,
+                    avatar: avatarUrl,
+                    frame: frameType || 'frame-default'
+                });
+            }
+            
+            updatePlayersList();
+            updateUI();
+            
+            // If we have at least 2 players, start countdown
+            if (Object.keys(gameState.playerDetails).length >= 2 && !gameState.roundActive) {
+                startCountdown();
+            }
+        }
+        
+        // Update players list
+        function updatePlayersList() {
+            playersList.innerHTML = '';
+            let totalTickets = 0;
+            
+            for (const username in gameState.playerDetails) {
+                totalTickets += gameState.playerDetails[username].totalBet;
+            }
+            
+            // Sort players by bet amount (descending)
+            const sortedPlayers = Object.keys(gameState.playerDetails)
+                .map(username => ({
+                    username,
+                    ...gameState.playerDetails[username]
+                }))
+                .sort((a, b) => b.totalBet - a.totalBet);
+            
+            for (const player of sortedPlayers) {
+                const winChance = ((player.totalBet / totalTickets) * 100).toFixed(1);
+                
+                const playerItem = document.createElement('div');
+                playerItem.className = 'player-item';
+                playerItem.innerHTML = `
+                    <div class="player-avatar ${player.frame}">
+                        <img src="${player.avatar}" class="w-full h-full rounded-lg">
+                    </div>
+                    <div class="player-info">
+                        <div class="player-username">${player.username}</div>
+                        <div class="player-bet">${player.totalBet} TON</div>
+                    </div>
+                    <div class="player-chance">${winChance}%</div>
+                `;
+                playersList.appendChild(playerItem);
+            }
+            
+            playersCount.textContent = Object.keys(gameState.playerDetails).length;
+        }
+        
+        // Start the countdown to round start
+        function startCountdown() {
+            gameState.roundActive = true;
+            countdownElement.classList.remove('hidden');
+            roundStatusElement.textContent = 'Раунд начинается...';
+            
+            const countdownInterval = setInterval(() => {
+                gameState.countdown--;
+                countdownElement.textContent = gameState.countdown;
+                
+                if (gameState.countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    startRound();
+                }
+            }, 1000);
+        }
+        
+        // Show winner notification
+        function showWinnerNotification(username, amount) {
+            const notification = document.createElement('div');
+            notification.className = 'winner-notification';
+            notification.innerHTML = `
+                <h3 class="font-bold text-lg">ПОБЕДА!</h3>
+                <div class="winner-amount">+${amount} TON</div>
+                <p class="text-sm">${username} выиграл приз!</p>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Start the round with spinning animation
+        function startRound() {
+            countdownElement.classList.add('hidden');
+            roundStatusElement.textContent = 'Крутим рулетку...';
+            
+            // Disable bet button during round
+            placeBetBtn.classList.add('btn-disabled');
+            
+            const extendedPlayers = [...gameState.players, ...gameState.players];
+            
+            rouletteTrack.innerHTML = '';
+            
+            // Calculate total tickets for win percentages
+            let totalTickets = 0;
+            for (const username in gameState.playerDetails) {
+                totalTickets += gameState.playerDetails[username].totalBet;
+            }
+            
+            extendedPlayers.forEach((player, index) => {
+                const avatarContainer = document.createElement('div');
+                avatarContainer.className = `flex-shrink-0 mx-1 flex flex-col items-center justify-center`;
+                
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = `avatar-container ${player.frame}`;
+                avatarDiv.style.width = '64px';
+                avatarDiv.style.height = '64px';
+                
+                // Calculate win chance for this player
+                const winChance = ((gameState.playerDetails[player.username].totalBet / totalTickets) * 100).toFixed(1);
+                
+                // Add chance indicator
+                const chanceIndicator = document.createElement('div');
+                chanceIndicator.className = 'chance-indicator';
+                chanceIndicator.textContent = `${winChance}%`;
+                
+                // Add spinning animation to avatars at the beginning
+                if (index < 10) {
+                    avatarDiv.style.animation = 'spin 2s linear infinite';
+                    setTimeout(() => {
+                        avatarDiv.style.animation = '';
+                    }, Math.random() * 3000 + 2000);
+                }
+                
+                const avatarImg = document.createElement('img');
+                avatarImg.src = player.avatar;
+                avatarImg.className = 'avatar-image';
+                
+                avatarDiv.appendChild(avatarImg);
+                avatarDiv.appendChild(chanceIndicator);
+                avatarContainer.appendChild(avatarDiv);
+                
+                const usernameSpan = document.createElement('span');
+                usernameSpan.className = 'text-xs mt-1 font-medium truncate w-16 text-center';
+                usernameSpan.textContent = index < gameState.players.length ? player.username : '';
+                avatarContainer.appendChild(usernameSpan);
+                
+                rouletteTrack.appendChild(avatarContainer);
+            });
+            
+            const winnerIndex = Math.floor(Math.random() * gameState.players.length);
+            const winnerUsername = gameState.players[winnerIndex].username;
+            const scrollDistance = -(winnerIndex * 72 + 36); // Adjusted for avatar size
+            
+            setTimeout(() => {
+                rouletteTrack.style.transform = `translateX(${scrollDistance}px)`;
+                
+                setTimeout(() => {
+                    const avatars = document.querySelectorAll('.roulette-track > div');
+                    const winnerAvatar = avatars[winnerIndex + gameState.players.length];
+                    const winnerAvatarContainer = winnerAvatar.querySelector('.avatar-container');
+                    winnerAvatarContainer.classList.add('winner-highlight');
+                    
+                    // Add confetti effect to winner avatar
+                    const confetti = document.createElement('div');
+                    confetti.className = 'absolute inset-0 flex items-center justify-center';
+                    confetti.innerHTML = `
+                        <div class="absolute w-2 h-2 bg-yellow-400 rounded-full" style="top: 10%; left: 20%; animation: confetti 1s ease-out forwards;"></div>
+                        <div class="absolute w-2 h-2 bg-yellow-400 rounded-full" style="top: 5%; left: 50%; animation: confetti 1.2s ease-out forwards;"></div>
+                        <div class="absolute w-2 h-2 bg-yellow-400 rounded-full" style="top: 15%; left: 70%; animation: confetti 0.8s ease-out forwards;"></div>
+                    `;
+                    winnerAvatarContainer.appendChild(confetti);
+                    
+                    roundStatusElement.textContent = `Победитель: ${winnerUsername}`;
+                    roundStatusElement.classList.add('text-yellow-400');
+                    
+                    // If the winner is the current user, add prize to balance
+                    if (winnerUsername === '@you') {
+                        gameState.userBalance += gameState.prizePool;
+                        showWinnerNotification(winnerUsername, gameState.prizePool);
+                    }
+                    
+                    // Track winner stats for daily records
+                    trackWinnerStats(winnerUsername, totalTickets, gameState.prizePool);
+                    
+                    setTimeout(() => {
+                        resetRound();
+                    }, 5000);
+                }, 8000);
+            }, 100);
+        }
+        
+        // Reset round for next game
+        function resetRound() {
+            gameState.roundActive = false;
+            gameState.players = [];
+            gameState.playerDetails = {};
+            gameState.countdown = 15;
+            gameState.prizePool = 0;
+            rouletteTrack.innerHTML = '';
+            rouletteTrack.style.transform = 'translateX(0)';
+            roundStatusElement.textContent = 'Ожидание игроков...';
+            roundStatusElement.classList.remove('text-yellow-400');
+            playersList.innerHTML = '';
+            playersCount.textContent = '0';
+            
+            // Enable bet button for new round
+            placeBetBtn.classList.remove('btn-disabled');
+            
+            updateUI();
+        }
+        
+        // Place a bet
+        function placeBet() {
+            const betAmount = parseInt(betAmountElement.value);
+            
+            if (betAmount < 1 || betAmount > gameState.userBalance) {
+                return;
+            }
+            
+            gameState.userBalance -= betAmount;
+            updateUI();
+            
+            const randomAvatar = demoAvatars[Math.floor(Math.random() * demoAvatars.length)];
+            const username = '@you';
+            if (!gameState.playerDetails[username]) {
+                gameState.playerDetails[username] = {
+                    totalBet: 0,
+                    avatar: randomAvatar,
+                    frame: gameState.userFrame || 'frame-default'
+                };
+            }
+            
+            gameState.playerDetails[username].totalBet += betAmount;
+            gameState.prizePool += betAmount;
+            
+            for (let i = 0; i < betAmount; i++) {
+                gameState.players.push({
+                    username: username,
+                    avatar: randomAvatar,
+                    frame: gameState.userFrame || 'frame-default'
+                });
+            }
+            
+            updatePlayersList();
+            updateUI();
+            
+            // If we have at least 2 players, start countdown
+            if (Object.keys(gameState.playerDetails).length >= 2 && !gameState.roundActive) {
+                startCountdown();
+            }
+        }
+        
+        // Buy item from shop
+        function buyItem(itemType, price) {
+            if (gameState.userBalance < price) {
+                alert('Недостаточно средств!');
+                return;
+            }
+            
+            if (itemType.startsWith('frame-')) {
+                gameState.userFrame = itemType;
+                alert(`Вы приобрели рамку: ${itemType.replace('frame-', '').toUpperCase()}`);
+            }
+            
+            gameState.userBalance -= price;
+            updateUI();
+        }
+        
+        // Adjust bet amount
+        function adjustBet(change) {
+            let newBet = parseInt(betAmountElement.value) + change;
+            newBet = Math.max(1, Math.min(newBet, gameState.userBalance));
+            betAmountElement.value = newBet;
+        }
+        
+        // Update UI elements
+        function updateUI() {
+            poolAmountElement.textContent = gameState.prizePool;
+            userBalanceElement.textContent = gameState.userBalance;
+            userBalanceElement2.textContent = gameState.userBalance;
+            betAmountElement.max = gameState.userBalance;
+        }
+        
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
